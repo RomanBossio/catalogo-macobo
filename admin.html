@@ -118,67 +118,68 @@
     <script>
         let cacheProductosAdmin = [];
 
-        async function cargarTablaAdmin(productosAMostrar = null) {
+        window.cargarTablaAdmin = async function(productosAMostrar = null) {
             const tbody = document.getElementById('tabla-admin-body');
 
-            if (!productosAMostrar) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-400 py-6">Cargando productos...</td></tr>`;
-                cacheProductosAdmin = await obtenerProductos();
-            }
-
-            const productos = [...(productosAMostrar || cacheProductosAdmin)];
-            tbody.innerHTML = '';
-
-            if (productos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-400 py-6">No hay productos cargados.</td></tr>`;
-                return;
-            }
-
-            // Ordenar alfabéticamente por categoría para que se vean separados y ordenados
-            productos.sort((a, b) => a.categoria.localeCompare(b.categoria));
-
-            let categoriaActual = '';
-
-            productos.forEach(p => {
-                // Si cambia la categoría, agregamos una fila divisoria visual
-                if (p.categoria !== categoriaActual) {
-                    categoriaActual = p.categoria;
-                    tbody.innerHTML += `
-                        <tr class="bg-slate-100 font-bold text-xs text-slate-600 uppercase">
-                            <td colspan="4" class="p-2 px-3 tracking-wider">${categoriaActual}</td>
-                        </tr>
-                    `;
+            try {
+                if (!productosAMostrar) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-400 py-6">Cargando productos...</td></tr>`;
+                    cacheProductosAdmin = await window.obtenerProductos();
                 }
 
-                tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3">
-                            <img src="${p.imagen || 'https://via.placeholder.com/100?text=Sin+Img'}" class="w-12 h-12 object-cover rounded">
-                        </td>
-                        <td class="p-3 font-medium text-slate-800">${p.nombre}</td>
-                        <td class="p-3 text-sm text-gray-600">
-                            <span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">${p.categoria}</span>
-                        </td>
-                        <td class="p-3 text-center space-x-2">
-                            <button onclick="prepararEdicion('${p.id}')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded text-xs font-semibold transition">Modificar</button>
-                            <button onclick="eliminarProducto('${p.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded text-xs font-semibold transition">Eliminar</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+                const productos = [...(productosAMostrar || cacheProductosAdmin)];
+                tbody.innerHTML = '';
 
-        // Buscador dentro del panel de administración
+                if (productos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-gray-400 py-6">No hay productos cargados.</td></tr>`;
+                    return;
+                }
+
+                productos.sort((a, b) => a.categoria.localeCompare(b.categoria));
+
+                let categoriaActual = '';
+
+                productos.forEach(p => {
+                    if (p.categoria !== categoriaActual) {
+                        categoriaActual = p.categoria;
+                        tbody.innerHTML += `
+                            <tr class="bg-slate-100 font-bold text-xs text-slate-600 uppercase">
+                                <td colspan="4" class="p-2 px-3 tracking-wider">${categoriaActual}</td>
+                            </tr>
+                        `;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3">
+                                <img src="${p.imagen || 'https://via.placeholder.com/100?text=Sin+Img'}" class="w-12 h-12 object-cover rounded">
+                            </td>
+                            <td class="p-3 font-medium text-slate-800">${p.nombre}</td>
+                            <td class="p-3 text-sm text-gray-600">
+                                <span class="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">${p.categoria}</span>
+                            </td>
+                            <td class="p-3 text-center space-x-2">
+                                <button onclick="prepararEdicion('${p.id}')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded text-xs font-semibold transition">Modificar</button>
+                                <button onclick="eliminarProducto('${p.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded text-xs font-semibold transition">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-red-500 py-6">Error al conectar con Firebase: ${error.message}</td></tr>`;
+            }
+        };
+
         document.getElementById('buscador-admin').addEventListener('input', (e) => {
             const texto = e.target.value.toLowerCase();
             const filtrados = cacheProductosAdmin.filter(p => 
                 p.nombre.toLowerCase().includes(texto) || 
                 p.categoria.toLowerCase().includes(texto)
             );
-            cargarTablaAdmin(filtrados);
+            window.cargarTablaAdmin(filtrados);
         });
-
-        window.addEventListener('load', () => cargarTablaAdmin());
     </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

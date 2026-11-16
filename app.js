@@ -19,20 +19,11 @@ const productosCol = collection(db, "productos");
 // Función para limpiar y convertir automáticamente los links de Google Drive
 window.convertirLinkDrive = function(urlOriginal) {
     if (!urlOriginal) return '';
-    
-    // Si ya es un enlace directo de Google Photos/Drive, lo devuelve tal cual
-    if (urlOriginal.includes('lh3.googleusercontent.com')) {
-        return urlOriginal;
-    }
-
-    // Si pegaste el link completo de Google Drive, extrae el ID automáticamente
+    if (urlOriginal.includes('lh3.googleusercontent.com')) return urlOriginal;
     const match = urlOriginal.match(/\/d\/([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
-        const idArchivo = match[1];
-        return `https://lh3.googleusercontent.com/d/${idArchivo}`;
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
     }
-
-    // Si es cualquier otro link, lo deja como está
     return urlOriginal;
 };
 
@@ -61,10 +52,10 @@ window.agregarProducto = async function(e) {
         await addDoc(productosCol, nuevoProd);
         alert('¡Producto agregado con éxito!');
         document.getElementById('form-producto').reset();
-        if (typeof cargarTablaAdmin === 'function') await cargarTablaAdmin();
+        if (typeof window.cargarTablaAdmin === 'function') await window.cargarTablaAdmin();
     } catch (error) {
-        console.error(error);
-        alert('Error al guardar el producto. Verificá las reglas de Firestore.');
+        console.error("Error Firebase:", error);
+        alert('Error al guardar: ' + error.message);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Dar de Alta';
@@ -108,10 +99,10 @@ window.actualizarProducto = async function(e) {
         alert('¡Producto modificado con éxito!');
         document.getElementById('form-editar').reset();
         document.getElementById('seccion-editar').classList.add('hidden');
-        if (typeof cargarTablaAdmin === 'function') await cargarTablaAdmin();
+        if (typeof window.cargarTablaAdmin === 'function') await window.cargarTablaAdmin();
     } catch (error) {
-        console.error(error);
-        alert('No se pudo modificar el producto.');
+        console.error("Error Firebase:", error);
+        alert('No se pudo modificar: ' + error.message);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Guardar Cambios';
@@ -123,10 +114,18 @@ window.eliminarProducto = async function(id) {
     if (confirm('¿Estás seguro de eliminar este producto?')) {
         try {
             await deleteDoc(doc(db, "productos", id));
-            if (typeof cargarTablaAdmin === 'function') await cargarTablaAdmin();
+            if (typeof window.cargarTablaAdmin === 'function') await window.cargarTablaAdmin();
         } catch (error) {
-            console.error(error);
-            alert('Error al eliminar el producto.');
+            console.error("Error Firebase:", error);
+            alert('Error al eliminar: ' + error.message);
         }
     }
 };
+
+// Iniciar automáticamente apenas Firebase esté listo
+if (typeof window.cargarTablaAdmin === 'function') {
+    window.cargarTablaAdmin();
+}
+if (typeof window.mostrarCatalogo === 'function') {
+    window.mostrarCatalogo();
+}
