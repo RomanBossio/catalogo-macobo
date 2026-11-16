@@ -57,11 +57,19 @@
         </div>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
     <script>
-        function mostrarCatalogo(productosAMostrar = null) {
-            const productos = productosAMostrar || obtenerProductos();
+        let cacheProductos = [];
+
+        async function mostrarCatalogo(productosAMostrar = null) {
             const contenedor = document.getElementById('contenedor-categorias');
+            
+            if (!productosAMostrar) {
+                contenedor.innerHTML = `<p class="text-center text-gray-500 py-10">Cargando catálogo...</p>`;
+                cacheProductos = await obtenerProductos();
+            }
+
+            const productos = productosAMostrar || cacheProductos;
             contenedor.innerHTML = '';
 
             if (productos.length === 0) {
@@ -116,15 +124,14 @@
 
         document.getElementById('buscador').addEventListener('input', (e) => {
             const texto = e.target.value.toLowerCase();
-            const productos = obtenerProductos();
-            const filtrados = productos.filter(p => 
+            const filtrados = cacheProductos.filter(p => 
                 p.nombre.toLowerCase().includes(texto) || 
                 p.categoria.toLowerCase().includes(texto)
             );
             mostrarCatalogo(filtrados);
         });
 
-        window.onload = () => mostrarCatalogo();
+        window.addEventListener('load', () => mostrarCatalogo());
     </script>
 </body>
 </html>
